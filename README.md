@@ -1,1 +1,1 @@
-# activiti-cloud-qraphql-notifications
+# activiti-cloud-graphql-notifications
