@@ -1,0 +1,31 @@
+apiVersion: skaffold/v1alpha2
+kind: Config
+build:
+  tagPolicy:
+    envTemplate:
+      template: "{{.DOCKER_REGISTRY}}/igdianov/activiti-cloud-qraphql-notifications:{{.VERSION}}"
+  artifacts:
+  - imageName: changeme
+    workspace: .
+    docker: {}
+  local: {}
+deploy:
+  kubectl:
+    manifests:
+profiles:
+- name: dev
+  build:
+    tagPolicy:
+      envTemplate:
+        template: "{{.DOCKER_REGISTRY}}/igdianov/activiti-cloud-qraphql-notifications:{{.DIGEST_HEX}}"
+    artifacts:
+    - docker: {}
+    local: {}
+  deploy:
+    helm:
+      releases:
+      - name: activiti-cloud-qraphql-notifications
+        chartPath: charts/activiti-cloud-qraphql-notifications
+        setValueTemplates:
+          image.repository: "{{.DOCKER_REGISTRY}}/igdianov/activiti-cloud-qraphql-notifications"
+          image.tag: "{{.DIGEST_HEX}}"
