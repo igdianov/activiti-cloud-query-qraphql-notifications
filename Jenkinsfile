@@ -3,8 +3,8 @@ pipeline {
       label "jenkins-maven"
     }
     environment {
-      ORG               = 'igdianov'
-      APP_NAME          = 'activiti-cloud-qraphql-notifications'
+      ORG               = 'introproventures'
+      APP_NAME          = 'activiti-cloud-query-qraphql-notifications'
       CHARTMUSEUM_CREDS = credentials('jenkins-x-chartmuseum')
     }
     stages {
@@ -22,7 +22,6 @@ pipeline {
             sh "mvn versions:set -DnewVersion=$PREVIEW_VERSION"
             sh "mvn install"
             sh 'export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold.yaml'
-
 
             sh "jx step post build --image $DOCKER_REGISTRY/$ORG/$APP_NAME:$PREVIEW_VERSION"
           }
@@ -49,14 +48,17 @@ pipeline {
             // so we can retrieve the version in later steps
             sh "echo \$(jx-release-version) > VERSION"
             sh "mvn versions:set -DnewVersion=\$(cat VERSION)"
+
+            sh "mvn install"
+
           }
-          dir ('./charts/activiti-cloud-qraphql-notifications') {
+          dir ('./charts/activiti-cloud-query-qraphql-notifications') {
             container('maven') {
               sh "make tag"
             }
           }
           container('maven') {
-            sh 'mvn clean deploy'
+            sh 'mvn clean deploy -DskipTests'
 
             sh 'export VERSION=`cat VERSION` && skaffold build -f skaffold.yaml'
 
@@ -70,7 +72,7 @@ pipeline {
           branch 'master'
         }
         steps {
-          dir ('./charts/activiti-cloud-qraphql-notifications') {
+          dir ('./charts/activiti-cloud-query-qraphql-notifications') {
             container('maven') {
               sh 'jx step changelog --version v\$(cat ../../VERSION)'
 
@@ -85,7 +87,7 @@ pipeline {
       }
     }
     post {
-        always {
+        success {
             cleanWs()
         }
         failure {

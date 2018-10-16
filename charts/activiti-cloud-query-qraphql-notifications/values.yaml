@@ -7,7 +7,7 @@ image:
   tag: dev
   pullPolicy: IfNotPresent
 service:
-  name: activiti-cloud-qraphql-notifications
+  name: graphql-notifications
   type: ClusterIP
   externalPort: 80
   internalPort: 8080
