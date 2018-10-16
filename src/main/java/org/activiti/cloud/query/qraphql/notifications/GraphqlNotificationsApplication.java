@@ -1,4 +1,4 @@
-package org.activiti.cloud.activiticloudqraphqlnotifications;
+package org.activiti.cloud.query.qraphql.notifications;
 
 import org.activiti.cloud.services.query.notifications.config.EnableActivitiNotificationsGateway;
 import org.springframework.boot.SpringApplication;
