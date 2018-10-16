@@ -1,7 +1,24 @@
 pipeline {
     agent {
-      label "jenkins-maven"
-    }
+	    kubernetes {
+	        // Change the name of jenkins-maven label to be able to use yaml configuration snippet
+	        label "maven-jenkins"
+	        // Inherit from Jx Maven pod template
+	        inheritFrom "maven"
+	        // Add scheduling configuration to Jenkins builder pod template
+	        yaml """
+spec:
+  nodeSelector:
+    cloud.google.com/gke-preemptible: true
+
+  # It is necessary to add toleration to GKE preemtible pool taint to the pod in order to run it on that node pool
+  tolerations:
+  - key: gke-preemptible
+    operator: Equal
+    value: true
+    effect: NoSchedule
+"""        
+	    }    }
     environment {
       ORG               = 'introproventures'
       APP_NAME          = 'activiti-cloud-query-graphql-notifications'
@@ -90,11 +107,15 @@ pipeline {
         success {
             cleanWs()
         }
+/*
         failure {
-            input """Pipeline failed. 
+
+		input """Pipeline failed. 
 We will keep the build pod around to help you diagnose any failures. 
 
 Select Proceed or Abort to terminate the build pod"""
         }
+*/	
+
     }
   }
