@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.activiti.cloud</groupId>
-	<artifactId>activiti-cloud-query-qraphql-notifications</artifactId>
+	<artifactId>activiti-cloud-query-graphql-notifications</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>activiti-cloud-query-qraphql-notifications</name>
-	<description>activiti-cloud-query-qraphql-notifications</description>
+	<name>activiti-cloud-query-graphql-notifications</name>
+	<description>activiti-cloud-query-graphql-notifications</description>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>

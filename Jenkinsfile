@@ -4,7 +4,7 @@ pipeline {
     }
     environment {
       ORG               = 'introproventures'
-      APP_NAME          = 'activiti-cloud-query-qraphql-notifications'
+      APP_NAME          = 'activiti-cloud-query-graphql-notifications'
       CHARTMUSEUM_CREDS = credentials('jenkins-x-chartmuseum')
     }
     stages {
@@ -52,7 +52,7 @@ pipeline {
             sh "mvn install"
 
           }
-          dir ('./charts/activiti-cloud-query-qraphql-notifications') {
+          dir ('./charts/activiti-cloud-query-graphql-notifications') {
             container('maven') {
               sh "make tag"
             }
@@ -72,7 +72,7 @@ pipeline {
           branch 'master'
         }
         steps {
-          dir ('./charts/activiti-cloud-query-qraphql-notifications') {
+          dir ('./charts/activiti-cloud-query-graphql-notifications') {
             container('maven') {
               sh 'jx step changelog --version v\$(cat ../../VERSION)'
 
