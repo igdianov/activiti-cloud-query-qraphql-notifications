@@ -1,4 +1,4 @@
-package org.activiti.cloud.query.qraphql.notifications;
+package org.activiti.cloud.query.graphql.notifications;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

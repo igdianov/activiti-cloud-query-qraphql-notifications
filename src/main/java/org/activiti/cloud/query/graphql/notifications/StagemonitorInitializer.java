@@ -1,4 +1,4 @@
-package org.activiti.cloud.query.qraphql.notifications;
+package org.activiti.cloud.query.graphql.notifications;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
