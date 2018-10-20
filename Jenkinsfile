@@ -1,4 +1,5 @@
 pipeline {
+	
     agent {
 	    kubernetes {
 	        // Change the name of jenkins-maven label to be able to use yaml configuration snippet
@@ -18,16 +19,18 @@ spec:
     value: true
     effect: NoSchedule
 """        
-	    }    }
+	} 
+    }
+    
     environment {
-      ORG               = 'introproventures'
-      APP_NAME          = 'activiti-cloud-query-graphql-notifications'
-      CHARTMUSEUM_CREDS = credentials('jenkins-x-chartmuseum')
+      ORG               = "introproventures"
+      APP_NAME          = "activiti-cloud-query-graphql-notifications"
+      CHARTMUSEUM_CREDS = credentials("jenkins-x-chartmuseum")
     }
     stages {
-      stage('CI Build and push snapshot') {
+      stage("CI Build and push snapshot") {
         when {
-          branch 'PR-*'
+          branch "PR-*"
         }
         environment {
           PREVIEW_VERSION = "0.0.0-SNAPSHOT-$BRANCH_NAME-$BUILD_NUMBER"
@@ -35,72 +38,48 @@ spec:
           HELM_RELEASE = "$PREVIEW_NAMESPACE".toLowerCase()
         }
         steps {
-          container('maven') {
-            sh "mvn versions:set -DnewVersion=$PREVIEW_VERSION"
-            sh "mvn install"
-            //sh 'export VERSION=$PREVIEW_VERSION && skaffold build -f skaffold.yaml'
-
-            //sh "jx step post build --image $DOCKER_REGISTRY/$ORG/$APP_NAME:$PREVIEW_VERSION"
+          container("maven") {
+            sh "make preview"
           }
-
-/*
-	dir ('./charts/preview') {
-           container('maven') {
-             sh "make preview"
-             sh "jx preview --app $APP_NAME --dir ../.."
-           }
-          }
-*/
         }
       }
-      stage('Build Release') {
+      stage("Build Release") {
         when {
-          branch 'master'
+          branch "master"
         }
         steps {
-          container('maven') {
+          container("maven") {
             // ensure we're not on a detached head
-            sh "git checkout master"
-            sh "git config --global credential.helper store"
+            sh "make checkout"
 
-            sh "jx step git credentials"
             // so we can retrieve the version in later steps
-            sh "echo \$(jx-release-version) > VERSION"
-            sh "mvn versions:set -DnewVersion=\$(cat VERSION)"
+            sh "make version"
+            
+            // Let's test first
+            sh "make install"
 
-            sh "mvn install"
-
-          }
-          dir ('./charts/activiti-cloud-query-graphql-notifications') {
-            container('maven') {
-              sh "make tag"
-            }
-          }
-          container('maven') {
-            sh 'mvn clean deploy -DskipTests'
-
-            sh 'export VERSION=`cat VERSION` && skaffold build -f skaffold.yaml'
-
-
-            sh "jx step post build --image $DOCKER_REGISTRY/$ORG/$APP_NAME:\$(cat VERSION)"
+            // Let's make tag in Git
+            sh "make tag"
+            
+            // Let's deploy to Nexus
+            sh "make deploy"
           }
         }
       }
-      stage('Promote to Environments') {
+      stage("Update Versions") {
         when {
-          branch 'master'
+          branch "master"
         }
         steps {
-          dir ('./charts/activiti-cloud-query-graphql-notifications') {
-            container('maven') {
-              sh 'jx step changelog --version v\$(cat ../../VERSION)'
+          container("maven") {
+            // Let's push changes and open PRs to downstream repositories
+            sh "make updatebot/push-version"
 
-              // release the helm chart
-              sh 'jx step helm release'
+            // Let's update any open PRs
+            sh "make updatebot/update"
 
-              // promote through all 'Auto' promotion Environments
-              sh 'jx promote -b --all-auto --timeout 1h --no-merge=true --version \$(cat ../../VERSION)'
-            }
+            // Let's publish release notes in Github using commits between previous and last tags
+            sh "make changelog"
           }
         }
       }
@@ -120,4 +99,4 @@ Select Proceed or Abort to terminate the build pod"""
 */	
 
     }
-  }
+}
