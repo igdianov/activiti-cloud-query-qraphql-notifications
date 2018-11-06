@@ -19,7 +19,7 @@ spec:
     value: true
     effect: NoSchedule
     
- # Mount gsutil volume with .boto file to copy chartmuseum index.yaml to Google bucket storage 
+# Create sidecar container with gsutil to publish chartmuseum index.yaml to Google bucket storage 
   volumes:
   - name: gsutil-volume
     secret:
@@ -28,11 +28,28 @@ spec:
       - key: .boto
         path: .boto
   containers:
-  - name: maven
+  - name: cloud-sdk
+    image: google/cloud-sdk:alpine
+    command:
+    - /bin/sh
+    - -c
+    args:
+    - gcloud config set pass_credentials_to_gsutil false && cat
+    workingDir: /home/jenkins
+    securityContext:
+      privileged: false
+    tty: true
+    resources:
+      requests:
+        cpu: 128m
+        memory: 256Mi
+      limits:
     volumeMounts:
-    - name: gsutil-volume
-      mountPath: /root/.boto
-      subPath: .boto            
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - name: gsutil-volume
+        mountPath: /root/.boto
+        subPath: .boto
 """        
 	} 
     }
@@ -59,10 +76,20 @@ spec:
         steps {
           container("maven") {
           
-            input "Pause"
-            
             sh "make preview"
+
+            input "Pause"
+            // Let's release chart into Github repository
+            sh "make -C charts/${APP_NAME} github"
           }
+          
+          container("cloud-sdk") {
+            input "Pause"
+          
+            // Let's update index.yaml in Chartmuseum storage bucket
+            sh "make -C charts/${APP_NAME} gs-bucket"
+          }
+          
         }
       }
       stage("Build Release") {

@@ -40,7 +40,7 @@ clean:
 deploy: $(NAME)-$(RELEASE_VERSION).tgz
 	curl --fail -u $(CHARTMUSEUM_CREDS_USR):$(CHARTMUSEUM_CREDS_PSW) --data-binary "@$(NAME)-$(RELEASE_VERSION).tgz" $(CHART_REPOSITORY)/api/charts
 
-release: deploy github gs-bucket
+release: deploy github
 	@echo Released "@$(NAME)-$(RELEASE_VERSION).tgz" to repositories 
 
 github: $(NAME)-$(RELEASE_VERSION).tgz
@@ -56,6 +56,9 @@ github: $(NAME)-$(RELEASE_VERSION).tgz
 	rm -rf $(GITHUB_CHARTS_DIR)
 	
 gs-bucket:
+	curl --fail -L $(CHART_REPOSITORY)/index.yaml | gsutil cp - "gs://$(CHARTMUSEUM_GS_BUCKET)/index.yaml"
+	
+gs-bucket-docker:
 	docker run -it --rm -v /root/.boto:/root/.boto google/cloud-sdk:alpine \
 		bash -c "gcloud config set pass_credentials_to_gsutil false && \
 			curl --fail -L ${CHART_REPOSITORY}/index.yaml | gsutil cp - gs://${CHARTMUSEUM_GS_BUCKET}/index.yaml"
