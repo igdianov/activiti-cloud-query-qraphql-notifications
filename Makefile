@@ -87,8 +87,8 @@ jx-release-version: .PHONY
 	$(eval RELEASE_VERSION = $(shell cat VERSION))
 	@echo Using next release version $(RELEASE_VERSION)
 
-version: jx-release-version
-	mvn versions:set -DnewVersion=$(VERSION)
+next-version: jx-release-version
+	mvn versions:set -DnewVersion=$(RELEASE_VERSION)
 	
 snapshot: .PHONY
 	$(eval RELEASE_VERSION = $(shell mvn versions:set -DnextSnapshot -q && mvn help:evaluate -Dexpression=project.version -q -DforceStdout))

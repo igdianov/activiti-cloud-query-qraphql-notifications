@@ -97,7 +97,7 @@ spec:
             sh "make checkout"
 
             // so we can retrieve the version in later steps
-            sh "make version"
+            sh "make next-version"
             
             // Let's test first
             sh "make install"
