@@ -9,10 +9,13 @@ GITHUB_CHARTS_BRANCH := $(or $(GITHUB_CHARTS_BRANCH),gh-pages)
 
 CHARTMUSEUM_GS_BUCKET := $(or $(CHARTMUSEUM_GS_BUCKET),$(ORG)-chartmuseum)
 
-
 $(NAME)-$(RELEASE_VERSION).tgz: 
 	${MAKE} package
-	
+
+credentials: .PHONY
+	git config --global credential.helper store
+	jx step git credentials
+		
 init:
 	helm init --client-only
 
@@ -43,7 +46,7 @@ deploy: $(NAME)-$(RELEASE_VERSION).tgz
 release: deploy github
 	@echo Released "@$(NAME)-$(RELEASE_VERSION).tgz" to repositories 
 
-github: $(NAME)-$(RELEASE_VERSION).tgz
+github: $(NAME)-$(RELEASE_VERSION).tgz credentials
 	$(eval GITHUB_CHARTS_DIR := $(shell basename $(GITHUB_CHARTS_REPO) .git))
 	git clone -b "$(GITHUB_CHARTS_BRANCH)" "$(GITHUB_CHARTS_REPO)" $(GITHUB_CHARTS_DIR)
 	cp "$(NAME)-$(RELEASE_VERSION).tgz" $(GITHUB_CHARTS_DIR)
