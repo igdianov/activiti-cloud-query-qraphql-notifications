@@ -68,6 +68,7 @@ updatebot/update-loop: .PHONY
 	updatebot update-loop --poll-time-ms 60000
 
 preview: .PHONY
+	$(shell echo ${PREVIEW_VERSION} > VERSION)
 	mvn versions:set -DnewVersion=$(PREVIEW_VERSION)
 	mvn install
 
@@ -83,9 +84,8 @@ deploy: .PHONY
 
 jx-release-version: .PHONY
 	$(shell jx-release-version > VERSION)
-	$(eval VERSION = $(shell cat VERSION))
-	$(eval RELEASE_VERSION = $(VERSION))
-	@echo Using next release version $(VERSION)
+	$(eval RELEASE_VERSION = $(shell cat VERSION))
+	@echo Using next release version $(RELEASE_VERSION)
 
 version: jx-release-version
 	mvn versions:set -DnewVersion=$(VERSION)
