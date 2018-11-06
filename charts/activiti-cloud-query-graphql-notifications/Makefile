@@ -12,7 +12,7 @@ CHARTMUSEUM_GS_BUCKET := $(or $(CHARTMUSEUM_GS_BUCKET),$(ORG)-chartmuseum)
 $(NAME)-$(RELEASE_VERSION).tgz: 
 	${MAKE} package
 
-credentials: .PHONY
+credentials: 
 	git config --global credential.helper store
 	jx step git credentials
 		
