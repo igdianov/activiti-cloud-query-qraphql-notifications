@@ -18,6 +18,38 @@ spec:
     operator: Equal
     value: true
     effect: NoSchedule
+    
+# Create sidecar container with gsutil to publish chartmuseum index.yaml to Google bucket storage 
+  volumes:
+  - name: gsutil-volume
+    secret:
+      secretName: gsutil-secret
+      items:
+      - key: .boto
+        path: .boto
+  containers:
+  - name: cloud-sdk
+    image: google/cloud-sdk:alpine
+    command:
+    - /bin/sh
+    - -c
+    args:
+    - gcloud config set pass_credentials_to_gsutil false && cat
+    workingDir: /home/jenkins
+    securityContext:
+      privileged: false
+    tty: true
+    resources:
+      requests:
+        cpu: 128m
+        memory: 256Mi
+      limits:
+    volumeMounts:
+      - mountPath: /home/jenkins
+        name: workspace-volume
+      - name: gsutil-volume
+        mountPath: /root/.boto
+        subPath: .boto
 """        
 	} 
     }
@@ -26,6 +58,12 @@ spec:
       ORG               = "introproventures"
       APP_NAME          = "activiti-cloud-query-graphql-notifications"
       CHARTMUSEUM_CREDS = credentials("jenkins-x-chartmuseum")
+      
+      CHART_REPOSITORY  = "http://jenkins-x-chartmuseum:8080" 
+
+      CHARTMUSEUM_GS_BUCKET = "introproventures"
+      GITHUB_CHARTS_REPO    = "https://github.com/igdianov/helm-charts.git"
+      
     }
     stages {
       stage("CI Build and push snapshot") {
@@ -39,8 +77,14 @@ spec:
         }
         steps {
           container("maven") {
+          
             sh "make preview"
+            
+            //sh "make skaffold/preview"
+            
+            sh "make helm/preview"
           }
+          
         }
       }
       stage("Build Release") {
@@ -63,7 +107,22 @@ spec:
             
             // Let's deploy to Nexus
             sh "make deploy"
+            
+            // Let's build and push Docker image
+			sh "make skaffold/release"
+            
+            // Let's release chart into Chartmuseum
+            sh "make helm/release"
+            
+            // Let's release chart into Github repository
+            sh "make helm/github"
+            
           }
+          container("cloud-sdk") {
+            // Let's update index.yaml in Chartmuseum storage bucket
+            sh "curl --fail -L ${CHART_REPOSITORY}/index.yaml | gsutil cp - gs://${CHARTMUSEUM_GS_BUCKET}/index.yaml"
+          }
+          
         }
       }
       stage("Update Versions") {

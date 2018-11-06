@@ -1,9 +1,9 @@
-CURRENT=$(pwd)
+CURRENT=$(shell pwd)
 NAME := $(APP_NAME)
 OS := $(shell uname)
 
-RELEASE_BRANCH := master
-RELEASE_VERSION := $(shell cat VERSION)
+RELEASE_BRANCH := $(or $(RELEASE_BRANCH),master)
+RELEASE_VERSION := $(or $(shell cat VERSION), $(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout))
 GROUP_ID := $(shell mvn help:evaluate -Dexpression=project.groupId -q -DforceStdout)
 ARTIFACT_ID := $(shell mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout)
 RELEASE_ARTIFACT := $(GROUP_ID):$(ARTIFACT_ID)
@@ -68,10 +68,9 @@ updatebot/update-loop: .PHONY
 	updatebot update-loop --poll-time-ms 60000
 
 preview: .PHONY
+	$(shell echo ${PREVIEW_VERSION} > VERSION)
 	mvn versions:set -DnewVersion=$(PREVIEW_VERSION)
 	mvn install
-	#${MAKE} skaffold/preview
-	${MAKE_HELM} build
 
 install: .PHONY
 	mvn clean install
@@ -82,14 +81,11 @@ verify: .PHONY
 
 deploy: .PHONY
 	mvn clean deploy -DskipTests
-	${MAKE} skaffold/release
-	${MAKE} helm/release
 
 jx-release-version: .PHONY
 	$(shell jx-release-version > VERSION)
-	$(eval VERSION = $(shell cat VERSION))
-	$(eval RELEASE_VERSION = $(VERSION))
-	@echo Using next release version $(VERSION)
+	$(eval RELEASE_VERSION = $(shell cat VERSION))
+	@echo Using next release version $(RELEASE_VERSION)
 
 version: jx-release-version
 	mvn versions:set -DnewVersion=$(VERSION)
@@ -119,8 +115,14 @@ helm/build: .PHONY
 helm/package: .PHONY
 	${MAKE_HELM} package
 
+helm/preview: .PHONY
+	${MAKE_HELM} preview
+
 helm/release: .PHONY
 	${MAKE_HELM} release
+
+helm/github: .PHONY
+	${MAKE_HELM} github
 
 helm/tag: .PHONY
 	${MAKE_HELM} tag
