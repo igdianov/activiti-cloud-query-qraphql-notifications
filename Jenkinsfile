@@ -58,6 +58,8 @@ spec:
       ORG               = "introproventures"
       APP_NAME          = "activiti-cloud-query-graphql-notifications"
       CHARTMUSEUM_CREDS = credentials("jenkins-x-chartmuseum")
+      
+      CHART_REPOSITORY  = "http://jenkins-x-chartmuseum:8080" 
 
       CHARTMUSEUM_GS_BUCKET = "introproventures"
       GITHUB_CHARTS_REPO    = "https://github.com/igdianov/helm-charts.git"
@@ -78,16 +80,17 @@ spec:
           
             sh "make preview"
 
-            input "Pause"
             // Let's release chart into Github repository
             sh "make -C charts/${APP_NAME} github"
           }
           
           container("cloud-sdk") {
-            input "Pause"
           
             // Let's update index.yaml in Chartmuseum storage bucket
-            sh "make -C charts/${APP_NAME} gs-bucket"
+            sh "curl --fail -L ${CHART_REPOSITORY}/index.yaml | gsutil cp - gs://${CHARTMUSEUM_GS_BUCKET}/index.yaml"
+
+            input "Pause"
+            
           }
           
         }
@@ -113,6 +116,11 @@ spec:
             // Let's deploy to Nexus
             sh "make deploy"
           }
+          container("cloud-sdk") {
+            // Let's update index.yaml in Chartmuseum storage bucket
+            sh "curl --fail -L ${CHART_REPOSITORY}/index.yaml | gsutil cp - gs://${CHARTMUSEUM_GS_BUCKET}/index.yaml"
+          }
+          
         }
       }
       stage("Update Versions") {
