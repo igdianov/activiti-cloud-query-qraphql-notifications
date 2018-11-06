@@ -79,18 +79,10 @@ spec:
           container("maven") {
           
             sh "make preview"
-
-            // Let's release chart into Github repository
-            sh "make -C charts/${APP_NAME} github"
-          }
-          
-          container("cloud-sdk") {
-          
-            // Let's update index.yaml in Chartmuseum storage bucket
-            sh "curl --fail -L ${CHART_REPOSITORY}/index.yaml | gsutil cp - gs://${CHARTMUSEUM_GS_BUCKET}/index.yaml"
-
-            input "Pause"
             
+            //sh "make skaffold/preview"
+            
+            sh "make helm/preview"
           }
           
         }
@@ -115,6 +107,16 @@ spec:
             
             // Let's deploy to Nexus
             sh "make deploy"
+            
+            // Let's build and push Docker image
+			sh "make skaffold/release"
+            
+            // Let's release chart into Chartmuseum
+            sh "make helm/release"
+            
+            // Let's release chart into Github repository
+            sh "make helm/github"
+            
           }
           container("cloud-sdk") {
             // Let's update index.yaml in Chartmuseum storage bucket

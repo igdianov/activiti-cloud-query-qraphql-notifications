@@ -24,6 +24,9 @@ build: clean
 	helm dependency build
 	helm lint
 
+preview: build
+	helm template .
+
 package: build init
 	helm package .
 
@@ -40,10 +43,8 @@ clean:
 	rm -rf charts
 	rm -rf ${NAME}*.tgz
 
-deploy: $(NAME)-$(RELEASE_VERSION).tgz
+release: $(NAME)-$(RELEASE_VERSION).tgz
 	curl --fail -u $(CHARTMUSEUM_CREDS_USR):$(CHARTMUSEUM_CREDS_PSW) --data-binary "@$(NAME)-$(RELEASE_VERSION).tgz" $(CHART_REPOSITORY)/api/charts
-
-release: deploy github
 	@echo Released "@$(NAME)-$(RELEASE_VERSION).tgz" to repositories 
 
 github: $(NAME)-$(RELEASE_VERSION).tgz credentials

@@ -70,8 +70,6 @@ updatebot/update-loop: .PHONY
 preview: .PHONY
 	mvn versions:set -DnewVersion=$(PREVIEW_VERSION)
 	mvn install
-	#${MAKE} skaffold/preview
-	${MAKE_HELM} build
 
 install: .PHONY
 	mvn clean install
@@ -82,8 +80,6 @@ verify: .PHONY
 
 deploy: .PHONY
 	mvn clean deploy -DskipTests
-	${MAKE} skaffold/release
-	${MAKE} helm/release
 
 jx-release-version: .PHONY
 	$(shell jx-release-version > VERSION)
@@ -119,8 +115,14 @@ helm/build: .PHONY
 helm/package: .PHONY
 	${MAKE_HELM} package
 
+helm/preview: .PHONY
+	${MAKE_HELM} preview
+
 helm/release: .PHONY
 	${MAKE_HELM} release
+
+helm/github: .PHONY
+	${MAKE_HELM} github
 
 helm/tag: .PHONY
 	${MAKE_HELM} tag
