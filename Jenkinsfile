@@ -18,6 +18,21 @@ spec:
     operator: Equal
     value: true
     effect: NoSchedule
+    
+ # Mount gsutil volume with .boto file to copy chartmuseum index.yaml to Google bucket storage 
+  volumes:
+  - name: gsutil-volume
+    secret:
+      secretName: gsutil-secret
+      items:
+      - key: .boto
+        path: .boto
+  containers:
+  - name: maven
+    volumeMounts:
+    - name: gsutil-volume
+      mountPath: /root/.boto
+      subPath: .boto            
 """        
 	} 
     }
@@ -26,6 +41,10 @@ spec:
       ORG               = "introproventures"
       APP_NAME          = "activiti-cloud-query-graphql-notifications"
       CHARTMUSEUM_CREDS = credentials("jenkins-x-chartmuseum")
+
+      CHARTMUSEUM_GS_BUCKET = "introproventures"
+      GITHUB_CHARTS_REPO    = "https://github.com/igdianov/helm-charts.git"
+      
     }
     stages {
       stage("CI Build and push snapshot") {
@@ -39,6 +58,9 @@ spec:
         }
         steps {
           container("maven") {
+          
+            input "Pause"
+            
             sh "make preview"
           }
         }
