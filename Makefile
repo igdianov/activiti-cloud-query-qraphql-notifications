@@ -1,9 +1,9 @@
-CURRENT=$(pwd)
+CURRENT=$(shell pwd)
 NAME := $(APP_NAME)
 OS := $(shell uname)
 
-RELEASE_BRANCH := master
-RELEASE_VERSION := $(shell cat VERSION)
+RELEASE_BRANCH := $(or $(RELEASE_BRANCH),master)
+RELEASE_VERSION := $(or $(shell cat VERSION), $(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout))
 GROUP_ID := $(shell mvn help:evaluate -Dexpression=project.groupId -q -DforceStdout)
 ARTIFACT_ID := $(shell mvn help:evaluate -Dexpression=project.artifactId -q -DforceStdout)
 RELEASE_ARTIFACT := $(GROUP_ID):$(ARTIFACT_ID)
