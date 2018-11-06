@@ -102,6 +102,9 @@ spec:
             // Let's test first
             sh "make install"
 
+            // Let's build and lint Helm chart
+            sh "make helm/build"
+
             // Let's make tag in Git
             sh "make tag"
             

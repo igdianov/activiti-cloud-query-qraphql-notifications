@@ -74,7 +74,6 @@ preview: .PHONY
 
 install: .PHONY
 	mvn clean install
-	${MAKE} helm/package
 
 verify: .PHONY
 	mvn clean verify
