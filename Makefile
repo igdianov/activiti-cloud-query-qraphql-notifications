@@ -15,12 +15,6 @@ MAKE_HELM := ${MAKE} -C charts/$(NAME)
 
 # dependency on .PHONY prevents Make from 
 # thinking there's `nothing to be done`
-preview-version: .PHONY
-	$(eval VERSION = $(shell echo $(PREVIEW_VERSION)))	
-
-release-version: .PHONY
-	$(eval VERSION = $(shell echo $(RELEASE_VERSION)))
-
 git-rev-list: .PHONY
 	$(eval REV = $(shell git rev-list --tags --max-count=1 --grep $(RELEASE_GREP_EXPR)))
 	$(eval PREVIOUS_REV = $(shell git rev-list --tags --max-count=1 --skip=1 --grep $(RELEASE_GREP_EXPR)))
@@ -37,17 +31,17 @@ checkout: credentials
 	# ensure we're not on a detached head
 	git checkout $(RELEASE_BRANCH) 
 
-skaffold/release: release-version
+skaffold/release: 
 	@echo doing skaffold docker build with tag=$(RELEASE_VERSION)
 	export VERSION=$(RELEASE_VERSION) && skaffold build -f skaffold.yaml 
 
-skaffold/preview: preview-version
+skaffold/preview: 
 	@echo doing skaffold docker build with tag=$(PREVIEW_VERSION)
 	export VERSION=$(PREVIEW_VERSION) &&  skaffold build -f skaffold.yaml 
 
 skaffold/build: .PHONY
-	@echo doing skaffold docker build with tag=$(VERSION)
-	skaffold build -f skaffold.yaml 
+	@echo doing skaffold docker build with tag=$(shell cat VERSION)
+	export VERSION=$(shell cat VERSION) skaffold build -f skaffold.yaml 
 
 update-versions: updatebot/push updatebot/update-loop
 
@@ -67,10 +61,9 @@ updatebot/update-loop: .PHONY
 	@echo doing updatebot update-loop $(RELEASE_VERSION)
 	updatebot update-loop --poll-time-ms 60000
 
-preview: .PHONY
+preview-version: .PHONY
 	$(shell echo ${PREVIEW_VERSION} > VERSION)
 	mvn versions:set -DnewVersion=$(PREVIEW_VERSION)
-	mvn install
 
 install: .PHONY
 	mvn clean install
